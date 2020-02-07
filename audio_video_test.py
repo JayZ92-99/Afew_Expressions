@@ -23,7 +23,10 @@ from keras.models import load_model
 from keras.models import model_from_json
 from keras.backend import manual_variable_initialization 
 from keras.optimizers import SGD, RMSprop
-
+from numpy import array
+from numpy import argmax
+from keras.utils import to_categorical
+import pandas as pd
 
 
 
@@ -67,6 +70,10 @@ for i in range(len(full_data)):
 train_data_csv = np.load('/home/ubuntu/Desktop/Sowmya/AffWild2/feat_new/train_feat_face.npy', allow_pickle=True)
 val_data_csv = np.load('/home/ubuntu/Desktop/Sowmya/AffWild2/feat_new/val_feat_face.npy',  allow_pickle=True)
 test_data_csv = np.load('/home/ubuntu/Desktop/Sowmya/AffWild2/feat_new/test_feat_face_old.npy',  allow_pickle=True)
+txt_dir="/home/ubuntu/Desktop/Sowmya/AffWild2/annotations/EXPR_Set/Training_Set/"
+val_dir="/home/ubuntu/Desktop/Sowmya/AffWild2/annotations/EXPR_Set/Validation_Set/"
+test_dir="/home/ubuntu/Desktop/Sowmya/AffWild2/Expression/expression_test_set.txt"
+
 print('Video train', np.array(train_data_csv).shape)
 print('Video val', np.array(val_data_csv).shape)
 train_video=np.reshape(train_data_csv, np.array(train_data_csv).shape + (1,))
@@ -80,21 +87,6 @@ for i in video_data_full:
 	for j in i:
 		flat.append(j)
 print(np.array(flat[1]).shape)
-# video_data_full = np.reshape(video_data_full, np.array(video_data_full).shape + (1,))
-
-# av_data = np.hstack([full_data, video_data_full])
-# print(np.array(av_data).shape)
-# sys.exit(0)
-
-
-txt_dir="/home/ubuntu/Desktop/Sowmya/AffWild2/annotations/EXPR_Set/Training_Set/"
-val_dir="/home/ubuntu/Desktop/Sowmya/AffWild2/annotations/EXPR_Set/Validation_Set/"
-test_dir="/home/ubuntu/Desktop/Sowmya/AffWild2/Expression/expression_test_set.txt"
-
-from numpy import array
-from numpy import argmax
-from keras.utils import to_categorical
-import pandas as pd
 
 def test(input_dir,x_train_audio_names,train_full_data,k):
 	val_arou_Train=[]
@@ -109,8 +101,6 @@ def test(input_dir,x_train_audio_names,train_full_data,k):
 					x = train_full_data[i]
 					#print(len(x))    
 					val_arou_Train.append([x,x_train_audio_names[i]])
-
-
 	
 	return val_arou_Train
 
@@ -121,7 +111,7 @@ def av_model(filename,audio_data,face_data):
 	x_test_face=np.array(face_data)
 	print("shapes")
 	print(x_test_audio.shape,x_test_face.shape)
-	model=load_model("/home/ubuntu/Desktop/Sowmya/AffWild2/Expression/audio_model_emo_av_41.h5")
+	model=load_model("/home/ubuntu/Desktop/Sowmya/AffWild2/Expression/gru_model.h5")
 	predicted_output = model.predict([x_test_audio,x_test_face],batch_size=100)
 	#pred_out = predicted_output.argmax(axis=-1)
 	print(predicted_output.shape)
@@ -163,64 +153,14 @@ def text_file_gen(predicted_output,filename):
 			#print("data",data_slice)
 			np.savetxt(outfile, data_slice, fmt='%-7.0f')
 	
-	
-
-
-
-
-
 def desplitting(data1,data2):
 	append1=data1[10:, :]
 	append2=data2[:-10, :]
 	avg_res=np.mean( np.array([ append1, append2 ]), axis=0 )
 	return(avg_res)
 
-
-
-
-
-
-
 test_audio=test(test_dir,x_train_audio_names,train_full_data,168)
 test_video=test(test_dir,x_train_audio_names,flat,714)
-print("test_audio",np.array(test_audio).shape)
-print("test_video",np.array(test_video).shape)
-
-'''file_names=[]
-for i in range(len(test_audio)):
-	temp = np.array(test_audio[i][1])
-	file_names.extend(temp)
-print("train_shape audio",np.array(x_test_audio).shape)
-
-
-
-x_test_audio=[]
-for i in range(len(test_audio)):
-	temp = np.array(test_audio[i][0])
-	x_test_audio.extend(temp)
-print("train_shape audio",np.array(x_test_audio).shape)
-x_test_video = []
-for i in range(len(test_video)):
-	temp = np.array(test_video[i][0])
-	x_test_video.extend(temp)
-print('train shape video', np.array(x_test_video).shape)	
-
-x_test_audio=np.array(x_test_audio)
-x_test_video=np.array(x_test_video)
-x_test_audio=np.concatenate((x_test_audio,np.zeros((77,15,168))),axis=0)
-x_test_video=np.concatenate((x_test_video,np.zeros((77,15,714))),axis=0)
-test_x = [np.array(x_test_audio), np.array(x_test_video)]
-#sys.exit(0)
-model = load_model('audio_model_emo_av_1.h5')
-predicted_output = model.predict(test_x, batch_size=100)
-print(np.array(predicted_output).shape)
-pred_out = predicted_output.argmax(axis=-1)
-
-print(pred_out)
-print(np.array(pred_out).shape)'''
-
-print("length",len(test_audio))
-print(len(test_video))
 for i in range(len(test_audio)):
 
 				filename=np.array(test_audio[i][1])
